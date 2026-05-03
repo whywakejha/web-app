@@ -6,47 +6,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A web application with a 3D React frontend and LLM API endpoints powered by HuggingFace models.
 
-## Intended Architecture
+## Architecture
 
-### Frontend (`/client` or `/frontend`)
-- React with Three.js (via `@react-three/fiber` and `@react-three/drei`) for 3D rendering
-- API calls to the backend LLM endpoints
+### Frontend (`/client`)
+- React + Vite with Three.js via `@react-three/fiber` and `@react-three/drei`
+- Wrap `<Canvas>` in a `Suspense` boundary; store GLTF/GLB assets in `public/models/` and lazy-load them
+- API calls go to backend routes under `/api/`
 
-### Backend (`/server` or `/api`)
-- Node.js (Express) or Python (FastAPI/Flask) serving LLM inference endpoints
-- HuggingFace `transformers` or `@huggingface/inference` SDK for model calls
-- Routes should be prefixed under `/api/`
+### Backend (`/api`)
+- Python + FastAPI serving LLM inference endpoints
+- HuggingFace Inference API (serverless) via `huggingface_hub`; use streaming responses
+- All routes prefixed under `/api/`
+- Store `HUGGINGFACE_API_KEY` in `.env`
 
-## Suggested Setup Commands
-
-Once the project is scaffolded, common commands will be:
+## Commands
 
 ```bash
-# Install dependencies
-npm install          # frontend
-pip install -r requirements.txt  # backend (if Python)
+# Frontend
+cd client
+npm install
+npm run dev       # Vite dev server
+npm run build
+npm test          # Vitest
 
-# Development
-npm run dev          # start frontend dev server (Vite/CRA)
-npm run server       # start backend server
-
-# Build
-npm run build        # production build of frontend
-
-# Tests
-npm test             # run frontend tests
-pytest               # run backend tests (if Python)
+# Backend
+cd api
+pip install -r requirements.txt
+uvicorn main:app --reload
+pytest            # run all tests
+pytest tests/test_foo.py::test_bar  # run a single test
 ```
-
-## HuggingFace Integration
-
-- Store the HuggingFace API token in `.env` as `HUGGINGFACE_API_KEY` (never commit `.env`)
-- Use the Inference API for serverless model calls, or `transformers` pipeline for local inference
-- Prefer streaming responses for LLM endpoints to reduce perceived latency
-
-## 3D React Notes
-
-- Use `@react-three/fiber` as the React renderer for Three.js scenes
-- Use `@react-three/drei` for helpers (cameras, controls, loaders, etc.)
-- Keep heavy 3D assets (GLTF/GLB) in `public/models/` and lazy-load them
-- Wrap `<Canvas>` in a `Suspense` boundary with a fallback for asset loading
